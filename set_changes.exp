@@ -1,0 +1,86 @@
+# !/usr/bin/expect -f
+#connection to host over ssh
+set timeout 5
+
+set user [lindex $argv 0]
+set ipaddr [lindex $argv 1]
+set pass [lindex $argv 2]
+set pass2 [lindex $argv 3]
+set pass3 [lindex $argv 4]
+
+spawn ssh $user@$ipaddr
+expect {
+	"# " { }
+	"assword: " {
+		send "$pass\n"
+		expect {
+			"# " { }
+			"assword: " {
+				send_user "sending pass2\n"
+				send "$pass2\n"
+				expect {
+					"# " { }
+					"assword: " {
+						send_user "sending pass3\n"
+						send "$pass3\n"
+						expect {
+							"# " { }
+							default {
+								send_user "Error, 3 intentos fallidos.\n"	
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	"(yes/no)? " {
+		send "yes\n"
+		expect {
+			"# " { }
+			"assword: " {
+				send "$pass\n"
+				expect {
+					"# " { }
+					"assword: " {
+						send_user "sending pass2\n"
+						send "$pass2\n"
+						expect {
+							"# " { }
+							"assword: " {
+								send_user "sending pass3\n"
+								send "$pass3\n"
+								expect {
+									"# " { }
+									default {
+										send_user "Error, 3 intentos fallidos.\n"	
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	default {
+		send_user "Fallo el login\n"
+		exit
+	}
+}
+
+send "cfgmtd -w -p /etc/\n"
+expect "#"
+send_user "reboot? \[y/n\]"
+interact {
+	"y" { 
+		send_user "rebooooting..." 
+		send "reboot\n"
+	}
+	"n" { 
+		send "exit\n";
+	} 
+	default {
+		send_user "options: y OR n";
+		}
+}

@@ -1,0 +1,72 @@
+# !/usr/bin/expect -f
+#connection to host over ssh
+set timeout 5
+
+set user [lindex $argv 0]
+set ipaddr [lindex $argv 1]
+set pass [lindex $argv 2]
+set pass2 [lindex $argv 3]
+set pass3 [lindex $argv 4]
+
+spawn scp $user@$ipaddr:/tmp/system.cfg /tmp/$ipaddr-system.cfg
+expect {
+	"# " { }
+	"assword: " {
+		send "$pass\n"
+		expect {
+			"# " { }
+			"assword: " {
+				send_user "sending pass2\n"
+				send "$pass2\n"
+				expect {
+					"# " { }
+					"assword: " {
+						send_user "sending pass3\n"
+						send "$pass3\n"
+						expect {
+							"# " { }
+							default {
+								send_user "Error, 3 intentos fallidos.\n"	
+								exit 1
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	"(yes/no)? " {
+		send "yes\n"
+		expect {
+			"# " { }
+			"assword: " {
+				send "$pass\n"
+				expect {
+					"# " { }
+					"assword: " {
+						send_user "sending pass2\n"
+						send "$pass2\n"
+						expect {
+							"# " { }
+							"assword: " {
+								send_user "sending pass3\n"
+								send "$pass3\n"
+								expect {
+									"# " { }
+									default {
+										send_user "Error, 3 intentos fallidos.\n"	
+										exit 1
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	default {
+		send_user "Fallo el login\n"
+		exit 1
+	}
+}
